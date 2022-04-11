@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import cv2
-from tensorflow.keras.models import load_model
+from tensorflow.keras.models import model_from_json
 
 FOURCC = cv2.VideoWriter_fourcc(*"mp4v")
 OUTPUT_FPS = 60
@@ -34,7 +34,12 @@ def main(video_path):
         vc.release()
         return
     vw = cv2.VideoWriter(video_path_base + "_output.mp4", FOURCC, OUTPUT_FPS, (int(vc.get(3)), int(vc.get(4))))
-    model = load_model("cnn_model.h5")
+
+    # load model from json and weights from hdf5
+    with open("cnn_model.json", "r") as json_model_file:
+        json_model_str = json_model_file.read()
+    model = model_from_json(json_model_str)
+    model.load_weights("cnn_model_weights.h5")
 
     # main loop
     while True:
