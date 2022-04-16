@@ -10,10 +10,13 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import cv2
+from mtcnn import MTCNN
 from tensorflow.keras.models import model_from_json
 
+
 FOURCC = cv2.VideoWriter_fourcc(*"mp4v")
-OUTPUT_FPS = 60
+OUTPUT_FPS = 30
+MTCNN_CONFIDENCE = 0.5
 EMOTIONS = ["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"]
 COLORS = [(0, 0, 255),     # anger is red (BGR)
           (0, 255, 0),     # disgust is green
@@ -23,7 +26,7 @@ COLORS = [(0, 0, 255),     # anger is red (BGR)
           (255, 0, 0),     # sad is blue
           (0, 165, 255)]   # surprise is orange
 
-def main(video_path):
+def main(model_json, model_weights, video_path):
     video_path_base = ".".join(video_path.split(".")[:-1])
     frame_data = pd.DataFrame({
         "angry":[], "disgust":[], "fear":[], "happy":[],
@@ -36,36 +39,77 @@ def main(video_path):
     vw = cv2.VideoWriter(video_path_base + "_output.mp4", FOURCC, OUTPUT_FPS, (int(vc.get(3)), int(vc.get(4))))
 
     # load model from json and weights from hdf5
-    with open("cnn_model.json", "r") as json_model_file:
+    with open(model_json, "r") as json_model_file:
         json_model_str = json_model_file.read()
     model = model_from_json(json_model_str)
-    model.load_weights("cnn_model_weights.h5")
+    model.load_weights(model_weights)
+
+    # face detecting model
+    face_detector = MTCNN()
 
     # main loop
     while True:
         (grabbed, raw_frame) = vc.read()
         if not grabbed:
             break
-        
-        # process frame
-        frame_confidences = []
-        frame = cv2.resize(raw_frame.copy(), (48, 48))
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        frame = np.expand_dims(frame, axis=2)
-        frame = np.expand_dims(frame, axis=0)
-        frame = frame.astype("float32")
-        frame = frame / 255.0
-        y_pred = model.predict(frame)
-        emotion = np.argmax(y_pred)
+        frame = raw_frame.copy()
+        angry_count = 0
+        disgust_count = 0
+        fear_count = 0
+        happy_count = 0
+        neutral_count = 0
+        sad_count = 0
+        surprise_count = 0
 
-        # annotate frame
-        emotion_str = EMOTIONS[emotion]
-        emotion_color = COLORS[emotion]
-        cv2.putText(raw_frame, emotion_str, (100, 100), cv2.FONT_HERSHEY_SCRIPT_COMPLEX, 3, emotion_color)
+        # detect faces
+        detections = face_detector.detect_faces(frame)
+        for det in detections:
+            x, y, width, height = det["box"]
+            if det["confidence"] >= MTCNN_CONFIDENCE and width > 0 and height > 0:
+                # get face from frame
+                padding = 4
+                face = frame[x - padding : x + width + padding*2, y - padding : y + height + padding*2]
+                if face.size == 0:
+                    continue
+        
+                # process face with our model to determine its emotion
+                face = cv2.resize(face, (48, 48))
+                face = cv2.cvtColor(face, cv2.COLOR_BGR2GRAY)
+                face = np.expand_dims(face, axis=2)
+                face = np.expand_dims(face, axis=0)
+                face = face.astype("float32")
+                face = face / 255.0
+                y_pred = model.predict(face)
+                emotion = np.argmax(y_pred)
+                emotion_str = EMOTIONS[emotion]
+                emotion_color = COLORS[emotion]
+
+                # annotate face with its emotion and the corresponding color
+                cv2.rectangle(raw_frame, (x, y), (x + width, y + height), emotion_color, 2)
+                cv2.putText(raw_frame, emotion_str, (x, y - 5), cv2.FONT_HERSHEY_SCRIPT_COMPLEX, 1, emotion_color)
+
+                # increment emotion count
+                if emotion == 0:
+                    angry_count += 1
+                elif emotion == 1:
+                    disgust_count += 1
+                elif emotion == 2:
+                    fear_count += 1
+                elif emotion == 3:
+                    happy_count += 1
+                elif emotion == 4:
+                    neutral_count += 1
+                elif emotion == 5:
+                    sad_count += 1
+                elif emotion == 6:
+                    surprise_count += 1
+
+        # save frame
         vw.write(raw_frame)
         
-        # frame data
-        frame_data.loc[len(frame_data.index)] = y_pred[0]
+        # frame emotions
+        frame_data.loc[len(frame_data.index)] = [angry_count, disgust_count, fear_count, happy_count,
+                                                 neutral_count, sad_count, surprise_count]
 
     # opencv cleanup
     vc.release()
@@ -73,7 +117,6 @@ def main(video_path):
 
     # plot and save frame stats
     frame_data.to_csv(video_path_base + "_stats.csv")
-    
     plt.plot(frame_data[EMOTIONS[0]], "r-", label = EMOTIONS[0])
     plt.plot(frame_data[EMOTIONS[1]], "m-", label = EMOTIONS[1])
     plt.plot(frame_data[EMOTIONS[2]], "g-", label = EMOTIONS[2])
@@ -87,6 +130,6 @@ def main(video_path):
 
 
 if __name__ == "__main__":
-    if len(argv) == 2:
-        if exists(argv[1]):
-            main(argv[1])
+    if len(argv) == 3:
+        if exists(argv[1]+ ".json") and exists(argv[1] + ".h5") and exists(argv[2]):
+            main(argv[1] + ".json", argv[1]+".h5", argv[2])

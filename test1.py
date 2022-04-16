@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import cv2
 from mtcnn import MTCNN
 
+
 FOURCC = cv2.VideoWriter_fourcc(*"mp4v")
 MTCNN_CONFIDENCE = 0.9
 OUTPUT_FPS = 60
