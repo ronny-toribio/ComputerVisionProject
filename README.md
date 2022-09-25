@@ -15,3 +15,6 @@ using a convolution neural network model to predict emotions
 - utils
    - vsplit.py - A Python program that splits an mp4 video into its frames
 
+### Winning model
+ReLU + he_normal + 3 convolutional layers
+![winning-model](grid_search_results/relu+he_normal+3-convolution-blocks-training.png)
