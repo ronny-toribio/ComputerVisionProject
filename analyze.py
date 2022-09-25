@@ -18,13 +18,15 @@ FOURCC = cv2.VideoWriter_fourcc(*"mp4v")
 OUTPUT_FPS = 30
 MTCNN_CONFIDENCE = 0.5
 EMOTIONS = ["angry", "disgust", "fear", "happy", "neutral", "sad", "surprise"]
-COLORS = [(0, 0, 255),     # anger is red (BGR)
-          (0, 255, 0),     # disgust is green
-          (200, 200, 200), # fear is gray
-          (0, 255, 255),   # happy is yellow
-          (255, 255, 255), # neutral is white
-          (255, 0, 0),     # sad is blue
-          (0, 165, 255)]   # surprise is orange
+COLORS = [
+    (0, 0, 255),     # anger is red (BGR)
+    (0, 255, 0),     # disgust is green
+    (200, 200, 200), # fear is gray
+    (0, 255, 255),   # happy is yellow
+    (255, 255, 255), # neutral is white
+    (255, 0, 0),     # sad is blue
+    (0, 165, 255)    # surprise is orange
+]
 
 def main(model_json, model_weights, video_path):
     video_path_base = ".".join(video_path.split(".")[:-1])
