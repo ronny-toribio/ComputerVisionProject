@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-@authors: Ronny Toribio, Kadir Altunel, Michael Cook-Stahl
+@authors: Ronny Toribio
 @project: Computer Vision Analysis
 """
 from sys import argv

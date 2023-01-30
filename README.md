@@ -110,7 +110,7 @@ analyze.py [model_name] [video.mp4]
 The program expects a JSON file containing the Keras structure named model_name.json and the models weights named model_name.h5.
 
 # Conclusion
-Overall the project was a success. We were able to build several versions of our CNN model and select the most accurate. We were even able to use it to detect emotions from faces. Michael created a powerpoint presentation for this project [here](/machine_learning_presentation.pptx). After successfully completing this project, I tried to remove the dependency of my [analyze.py](/analyze.py) of using another model for facial detection before predicting emotions. I attempted to attach a Keras RetinaNet to our model in order to generate bounding boxes along with emotion classification. This attempt is [train2.ipynb](/train2.ipynb) and was ultimately unsuccessful.
+Overall the project was a success. We were able to build several versions of our CNN model and select the most accurate. We were even able to use it to detect emotions from faces. Michael created a powerpoint presentation for this project [here](/machine_learning_presentation.pptx). After successfully completing this project, I tried to remove the dependency of my [analyze.py](/analyze.py) of using another model for facial detection before predicting emotions. I attempted to attach a Keras RetinaNet to our model in order to generate bounding boxes along with emotion classification. This attempt is [train2.ipynb](/train2.ipynb) and was ultimately unsuccessful. In the future I would like to revisit the bounding box regression.
 
 # Authors
 - [Ronny Toribio](https://github.com/ronny-phoenix) - Project lead, Data Wrangling, Model design, Video application
